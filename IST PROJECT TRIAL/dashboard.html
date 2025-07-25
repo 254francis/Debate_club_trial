@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>User Dashboard | Debate Club</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <style>
+    .section { margin-bottom: 2rem; }
+    .chat-box { max-height: 200px; overflow-y: auto; background: #f8f9fa; padding: 1rem; border-radius: 6px; }
+  </style>
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container">
+      <a class="navbar-brand" href="#">Debate Club</a>
+      <div class="ms-auto">
+        <a href="../logout.php" class="btn btn-outline-light">Logout</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container mt-4">
+    <h2 class="mb-4">Welcome to Your Dashboard</h2>
+
+    <!-- Events -->
+    <div class="section">
+      <h4>📅 Upcoming Events</h4>
+      <ul id="eventList" class="list-group">
+        <!-- Populated via JS -->
+      </ul>
+    </div>
+
+    <!-- Resources -->
+    <div class="section">
+      <h4>🎥 Tournament Resources</h4>
+      <ul class="list-group">
+        <li class="list-group-item">
+          <a href="https://calicotab.com/paudc2024" target="_blank">PAUDC 2024 Draws & Tabs</a>
+        </li>
+        <li class="list-group-item">
+          <a href="https://calicotab.com/wudc2024" target="_blank">WUDC 2024 Motions Archive</a>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Feedback -->
+    <div class="section">
+      <h4>💬 Submit Feedback</h4>
+      <form action="../feedback.php" method="POST">
+        <textarea class="form-control mb-2" name="message" rows="3" placeholder="Your thoughts..." required></textarea>
+        <button class="btn btn-secondary">Send</button>
+      </form>
+    </div>
+
+    <!-- Chat -->
+    <div class="section">
+      <h4>🗣️ Chat with Members</h4>
+      <div class="chat-box mb-2" id="chatBox">
+        <!-- Dynamically loaded chat messages -->
+      </div>
+      <form action="../chat.php" method="POST" id="chat-form">
+        <div class="input-group">
+          <input type="text" id="message" name="message" class="form-control" placeholder="Type a message..." required>
+          <button class="btn btn-primary">Send</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Event Loader -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      fetch('../load_events.php')
+        .then(res => res.json())
+        .then(data => {
+          const list = document.getElementById('eventList');
+          list.innerHTML = '';
+          data.forEach(e => {
+            const li = document.createElement('li');
+            li.className = 'list-group-item';
+            li.textContent = `${e.title} – ${e.date}`;
+            list.appendChild(li);
+          });
+        });
+    });
+  </script>
+
+  <!-- Chat Auto-Refresh + Submission via AJAX -->
+  <script>
+    function loadChat() {
+      fetch('../ajax_chat.php')
+        .then(res => res.text())
+        .then(html => {
+          document.getElementById('chatBox').innerHTML = html;
+        });
+    }
+    loadChat();
+    setInterval(loadChat, 5000);
+
+    document.getElementById('chat-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const msg = document.getElementById('message').value;
+      fetch('../ajax_chat.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ action: 'send', message: msg })
+      }).then(() => {
+        document.getElementById('message').value = '';
+        loadChat();
+      });
+    });
+  </script>
+</body>
+</html>

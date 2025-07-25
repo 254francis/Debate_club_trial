@@ -1,0 +1,7 @@
+body {
+  background: #f3f5f9;
+}
+input:focus {
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 0.1rem rgba(13,110,253,.25);
+}

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Panel | Debate Club</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <style>
+    .section { margin-bottom: 2rem; }
+    .chat-box { max-height: 200px; overflow-y: auto; background: #f8f9fa; padding: 1rem; border-radius: 6px; }
+  </style>
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+      <a class="navbar-brand" href="#">Debate Club Admin</a>
+      <div class="ms-auto">
+        <a href="../logout.php" class="btn btn-outline-light">Logout</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container mt-4">
+    <h2 class="mb-4">Dashboard Overview</h2>
+
+    <!-- 📩 Feedback Section -->
+    <div class="section">
+      <h4>📩 Recent Feedback</h4>
+      <ul id="feedbackList" class="list-group">
+        <li class="list-group-item">Loading...</li>
+      </ul>
+    </div>
+
+    <!-- 💬 Chat Section -->
+    <div class="section">
+      <h4>💬 Chat with Members</h4>
+      <div class="chat-box mb-2" id="chatBox">Loading chat...</div>
+    </div>
+
+    <!-- 💰 Finance Section -->
+    <div class="section">
+      <h4>💰 Finance Report</h4>
+      <button class="btn btn-outline-secondary mb-3" onclick="printFinance()">🖨️ Export to PDF</button>
+
+      <div id="printable-area">
+        <table class="table table-bordered">
+          <thead>
+            <tr>
+              <th>Description</th>
+              <th>Amount</th>
+              <th>Type</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody id="financeTableBody">
+            <!-- Populated via JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    // 🧠 Load Chat
+    function loadChat() {
+      fetch('../ajax_chat.php')
+        .then(res => res.text())
+        .then(html => {
+          document.getElementById('chatBox').innerHTML = html;
+        });
+    }
+    loadChat();
+    setInterval(loadChat, 5000);
+
+    // 🧠 Load Feedback
+    function loadFeedback() {
+      fetch('../load_feedback.php')
+        .then(res => res.json())
+        .then(data => {
+          const list = document.getElementById('feedbackList');
+          list.innerHTML = '';
+          data.forEach(fb => {
+            const li = document.createElement('li');
+            li.className = 'list-group-item';
+            li.innerHTML = `<strong>${fb.name}</strong>: ${fb.message} <span class="text-muted">(${fb.date})</span>`;
+            list.appendChild(li);
+          });
+        });
+    }
+    loadFeedback();
+
+    // 💰 Load Finance Data
+    function loadFinance() {
+      fetch('../load_finance.php')
+        .then(res => res.json())
+        .then(data => {
+          const body = document.getElementById('financeTableBody');
+          body.innerHTML = '';
+          data.forEach(row => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+              <td>${row.description}</td>
+              <td>${row.amount}</td>
+              <td>${parseFloat(row.amount) >= 0 ? 'Income' : 'Expense'}</td>
+              <td>${row.date}</td>
+            `;
+            body.appendChild(tr);
+          });
+        });
+    }
+    loadFinance();
+
+    // 📄 Print to PDF
+    function printFinance() {
+      const content = document.getElementById('printable-area').innerHTML;
+      const original = document.body.innerHTML;
+      document.body.innerHTML = content;
+      window.print();
+      document.body.innerHTML = original;
+      location.reload(); // Reload page to restore all JS
+    }
+  </script>
+</body>
+</html>
