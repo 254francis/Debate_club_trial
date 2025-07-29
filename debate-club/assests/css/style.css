@@ -1,0 +1,66 @@
+/* ...existing styles... */
+
+.avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--secondary);
+  transition: box-shadow 0.2s, transform 0.2s;
+  box-shadow: 0 2px 8px rgba(201,169,78,0.08);
+  position: relative;
+  background: #fff;
+}
+.avatar:hover, .avatar:focus {
+  box-shadow: 0 6px 18px rgba(201,169,78,0.18);
+  transform: scale(1.08);
+  z-index: 2;
+}
+.avatar-badge {
+  position: absolute;
+  bottom: 0;
+  right: -2px;
+  background: #34c759;
+  color: #fff;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+}
+.avatar-badge.offline {
+  background: #999;
+}
+.avatar-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7em;
+  position: relative;
+}
+.avatar-tooltip {
+  position: absolute;
+  bottom: 110%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #333;
+  color: #fff;
+  font-size: 0.85rem;
+  padding: 2px 8px;
+  border-radius: 4px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s;
+  white-space: nowrap;
+  z-index: 10;
+}
+.avatar:hover + .avatar-tooltip, .avatar:focus + .avatar-tooltip {
+  opacity: 1;
+}
+.avatar-container {
+  position: relative;
+  display: inline-block;
+}

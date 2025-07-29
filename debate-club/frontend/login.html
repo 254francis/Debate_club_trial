@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Login | USIU-A Debate Society</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/debate-theme.css">
+  <style>
+    .fade-in { opacity: 0; transform: translateY(30px); transition: all 0.7s cubic-bezier(.48,.2,.52,.97);}
+    .fade-in.show { opacity: 1; transform: translateY(0);}
+    .card { transition: box-shadow 0.2s, transform 0.2s; }
+    .card:hover { box-shadow: 0 8px 32px rgba(128,0,0,0.18); transform: translateY(-4px) scale(1.02);}
+    @media (max-width:600px){ .hero-title{font-size:2rem;} }
+  </style>
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg fixed-top">
+    <div class="container">
+      <a class="navbar-brand" href="#">
+        <img src="assets/img/logo.png" alt="Debate Club Logo" />
+        USIU-A Debate Society
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link" href="register.html">Sign Up</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+  <div class="hero" style="margin-top:56px;">
+    <img src="assets/img/logo.png" alt="Debate Club Logo" class="logo-img mb-2" style="max-height:100px;">
+    <div class="hero-title">Welcome Back</div>
+    <div class="hero-subtitle">Login to your Debate Club account</div>
+  </div>
+  <div class="container d-flex justify-content-center align-items-center" style="min-height: 60vh;">
+    <div class="card p-4 fade-in" style="max-width: 400px; width:100%;">
+      <div class="card-header text-center mb-3">
+        <i class="fa-solid fa-user-shield me-1"></i> Member Login
+      </div>
+      <div id="loginAlert"></div>
+      <form id="loginForm" novalidate>
+        <div class="mb-3">
+          <label>Email Address</label>
+          <input type="email" name="email" class="form-control" placeholder="e.g. name@domain.com" required>
+        </div>
+        <div class="mb-3">
+          <label>Password</label>
+          <input type="password" name="password" class="form-control" placeholder="********" required>
+        </div>
+        <button class="btn btn-primary w-100 mt-2" type="submit" id="loginBtn">
+          <span id="loginBtnText"><i class="fa-solid fa-sign-in-alt me-1"></i> Login</span>
+          <span class="spinner-border spinner-border-sm d-none" id="loginSpinner"></span>
+        </button>
+      </form>
+      <div class="text-center mt-3">
+        <small>Don't have an account? <a href="register.html">Register here</a></small>
+      </div>
+    </div>
+  </div>
+  <footer>
+    &copy; 2025 USIU-A Debate Society. Inspired by Stanford & Oxford Union.
+  </footer>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    document.querySelectorAll('.fade-in').forEach((el, i) => { setTimeout(() => el.classList.add('show'), 200 + (i*180)); });
+    document.getElementById('loginForm').addEventListener('submit', function(e){
+      e.preventDefault();
+      let btn = document.getElementById('loginBtnText');
+      let spinner = document.getElementById('loginSpinner');
+      btn.classList.add('d-none');
+      spinner.classList.remove('d-none');
+      let form = this;
+      fetch('login.php', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({
+          email: form.email.value,
+          password: form.password.value
+        })
+      }).then(res=>res.json()).then(resp=>{
+        btn.classList.remove('d-none');
+        spinner.classList.add('d-none');
+        if(resp.success){
+          document.getElementById('loginAlert').innerHTML = `<div class="alert alert-success">Login successful! Redirecting...</div>`;
+          setTimeout(()=>window.location.href=resp.redirect||'dashboard.html', 1200);
+        } else {
+          document.getElementById('loginAlert').innerHTML = `<div class="alert alert-danger">${resp.error||'Login failed. Try again.'}</div>`;
+        }
+      }).catch(()=>{
+        btn.classList.remove('d-none');
+        spinner.classList.add('d-none');
+        document.getElementById('loginAlert').innerHTML = `<div class="alert alert-danger">Could not reach server.</div>`;
+      });
+    });
+  </script>
+</body>
+</html>

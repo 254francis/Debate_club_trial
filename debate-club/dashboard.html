@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>User Dashboard | USIU-A Debate Society</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/debate-theme.css">
+  <style>
+    .fade-in { opacity: 0; transform: translateY(30px); transition: all 0.7s cubic-bezier(.48,.2,.52,.97);}
+    .fade-in.show { opacity: 1; transform: translateY(0);}
+    .card { transition: box-shadow 0.2s, transform 0.2s; }
+    .card:hover { box-shadow: 0 8px 32px rgba(128,0,0,0.18); transform: translateY(-4px) scale(1.02);}
+    .spinner-center { display: flex; align-items: center; justify-content: center; min-height: 80px; }
+    .avatar { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; border: 2px solid var(--secondary); background:#fff; }
+    .avatar-badge { position: absolute; bottom: 0; right: -2px; background: #34c759; color: #fff; border-radius: 50%; width: 16px; height: 16px; font-size: .95rem; display: flex; align-items: center; justify-content: center; border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.15);}
+    .avatar-badge.offline { background: #bbb; }
+    .avatar-container { position: relative; display: inline-block; }
+    .avatar-tooltip { position: absolute; bottom: 110%; left: 50%; transform: translateX(-50%); background: #333; color: #fff; font-size: 0.85rem; padding: 2px 8px; border-radius: 4px; opacity: 0; pointer-events: none; transition: opacity 0.18s; white-space: nowrap; z-index: 10;}
+    .avatar:hover + .avatar-tooltip, .avatar:focus + .avatar-tooltip { opacity: 1; }
+    .avatar-group { display: flex; flex-wrap: wrap; gap: 0.7em; position: relative; }
+    @media (max-width:600px){ .hero-title{font-size:2rem;} }
+  </style>
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg fixed-top">
+    <div class="container">
+      <a class="navbar-brand" href="#">
+        <img src="assets/img/logo.png" alt="Debate Club Logo" />
+        USIU-A Debate Society
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link active" href="#dashboard">Dashboard</a></li>
+          <li class="nav-item"><a class="nav-link" href="#events">Events</a></li>
+          <li class="nav-item"><a class="nav-link" href="#chat">Chat</a></li>
+          <li class="nav-item"><a class="nav-link" href="#resources">Resources</a></li>
+          <li class="nav-item"><a class="nav-link" href="logout.php">Logout</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+  <div class="toast-container" id="toasts"></div>
+  <div class="hero" style="margin-top:56px;">
+    <img src="assets/img/logo.png" alt="Debate Club Logo" class="logo-img mb-2" style="max-height:100px;">
+    <div class="hero-title">Welcome, <span id="userName">Member</span>!</div>
+    <div class="hero-subtitle">Stay updated, get involved, and connect with fellow debaters!</div>
+    <a href="#events" class="btn btn-cta"><i class="fa-solid fa-calendar-week me-2"></i> See Upcoming Events</a>
+  </div>
+  <div class="container mt-4">
+    <div id="mainAlert"></div>
+    <div class="row">
+      <div class="col-md-8">
+        <div class="card mb-4 fade-in" id="announcements">
+          <div class="card-header">
+            <i class="fa-solid fa-bullhorn me-2"></i> Announcements
+          </div>
+          <div class="card-body" id="announcementList">
+            <div class="spinner-center"><div class="spinner-border text-primary"></div></div>
+          </div>
+        </div>
+        <div class="card mb-4 fade-in" id="events">
+          <div class="card-header d-flex align-items-center">
+            <i class="fa-solid fa-calendar-days me-2"></i> Upcoming Events
+            <input class="form-control ms-auto" id="eventSearch" placeholder="Search events..." style="width: 180px; max-width:50%;">
+          </div>
+          <div class="card-body">
+            <ul class="list-group list-group-flush" id="eventList"></ul>
+            <div id="eventLoading" class="text-center py-3 d-none"><div class="spinner-border"></div></div>
+            <div class="text-end mt-3">
+              <button class="btn btn-outline-primary btn-sm" onclick="filterEvents('all')">All</button>
+              <button class="btn btn-outline-success btn-sm" onclick="filterEvents('Debate')">Debates</button>
+              <button class="btn btn-outline-warning btn-sm" onclick="filterEvents('Workshop')">Workshops</button>
+            </div>
+          </div>
+        </div>
+        <div class="card mb-4 fade-in" id="resources">
+          <div class="card-header">
+            <i class="fa-solid fa-book-open-reader me-2"></i> Tournament Resources
+          </div>
+          <div class="card-body" id="resourceList">
+            <div class="spinner-border text-warning"></div>
+          </div>
+        </div>
+        <div class="card mb-4 fade-in" id="feedback">
+          <div class="card-header">
+            <i class="fa-solid fa-comments me-2"></i> Submit Feedback
+          </div>
+          <div class="card-body">
+            <form id="feedbackForm">
+              <textarea class="form-control mb-2" name="message" rows="3" placeholder="Your thoughts..." required></textarea>
+              <button class="btn btn-secondary" type="submit"><span id="feedbackBtnText"><i class="fa-solid fa-paper-plane me-1"></i>Send</span>
+                <span class="spinner-border spinner-border-sm d-none" id="feedbackSpinner"></span>
+              </button>
+              <div id="feedbackAlert"></div>
+            </form>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card mb-4 fade-in" id="members">
+          <div class="card-header">
+            <i class="fa-solid fa-user-group me-2"></i> Members Online
+          </div>
+          <div class="card-body avatar-group" id="memberAvatars">
+            <div class="spinner-border text-success"></div>
+          </div>
+        </div>
+        <div class="card fade-in" id="chat">
+          <div class="card-header">
+            <i class="fa-solid fa-comments me-2"></i> Member Chat
+            <span class="badge bg-success ms-2" id="chatOnline">4 online</span>
+          </div>
+          <div class="card-body" style="max-height:200px; overflow-y:auto;" id="chatBox">
+            <div class="text-muted">Loading chat...</div>
+          </div>
+          <div class="card-footer">
+            <form id="chatForm" class="d-flex gap-2">
+              <input type="text" id="chatMessage" name="message" class="form-control" placeholder="Type a message..." required>
+              <button class="btn btn-primary" type="submit">
+                <span id="chatBtnText"><i class="fa-solid fa-paper-plane"></i></span>
+                <span class="spinner-border spinner-border-sm d-none" id="chatSpinner"></span>
+              </button>
+            </form>
+            <div id="chatAlert"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <footer>
+    &copy; 2025 USIU-A Debate Society. Inspired by Stanford & Oxford Union.
+  </footer>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Animate sections on load
+    document.querySelectorAll('.fade-in').forEach((el, i) => {
+      setTimeout(() => el.classList.add('show'), 200 + (i*180));
+    });
+
+    // Simulate current user (replace with session for prod)
+    document.getElementById('userName').innerText = "Jane Doe";
+
+    // Toast utility
+    function showToast(msg, type='success') {
+      const toast = document.createElement('div');
+      toast.className = `toast show align-items-center text-bg-${type} border-0 mb-2`;
+      toast.setAttribute("role","alert");
+      toast.setAttribute("aria-live","assertive");
+      toast.setAttribute("aria-atomic","true");
+      toast.innerHTML = `<div class="d-flex">
+        <div class="toast-body">${msg}</div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+      </div>`;
+      document.getElementById('toasts').appendChild(toast);
+      setTimeout(()=>toast.remove(), 3300);
+    }
+
+    // Dynamic Announcements
+    fetch('announcements.php')
+      .then(res => res.ok ? res.json() : [])
+      .then(data => {
+        if(data && data.length) {
+          document.getElementById('announcementList').innerHTML = 
+            data.map(a=>`<div class="alert alert-${a.type} alert-dismissible fade show" role="alert">
+              <strong>${a.title}</strong> ${a.message}
+              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>`).join('');
+        } else {
+          document.getElementById('announcementList').innerHTML = `<div class="alert alert-info">No announcements at this time.</div>`;
+        }
+      }).catch(()=>document.getElementById('announcementList').innerHTML = `<div class="alert alert-danger">Failed to load announcements.</div>`);
+
+    // Dynamic Events
+    let demoEvents = [];
+    function renderEvents(events) {
+      const list = document.getElementById('eventList');
+      list.innerHTML = '';
+      if(events.length === 0) {
+        list.innerHTML = `<li class="list-group-item text-muted">No events found.</li>`;
+        return;
+      }
+      events.forEach(e=>{
+        list.innerHTML += `<li class="list-group-item">
+          <b>${e.title}</b> &mdash; <span>${e.date}</span>
+          <span class="badge bg-${e.type=='Debate'?'primary':'warning text-dark'} ms-2">${e.type}</span>
+        </li>`;
+      });
+    }
+    function filterEvents(type) {
+      if(type==='all'){ renderEvents(demoEvents); return; }
+      renderEvents(demoEvents.filter(e=>e.type===type));
+    }
+    fetch('events.php')
+      .then(res=>res.ok?res.json():[])
+      .then(data=>{
+        demoEvents = data;
+        renderEvents(demoEvents);
+      })
+      .catch(()=>renderEvents([]));
+    document.getElementById('eventSearch').addEventListener('input', function(){
+      const val = this.value.toLowerCase();
+      renderEvents(demoEvents.filter(e=>e.title.toLowerCase().includes(val)));
+    });
+
+    // Dynamic Resources
+    fetch('api/resources.php')
+      .then(res=>res.ok?res.json():[])
+      .then(data=>{
+        document.getElementById('resourceList').innerHTML = '<ul class="list-group list-group-flush">' +
+          data.map(r=>`<li class="list-group-item">
+            <a href="${r.link}" target="_blank"><i class="fa-solid fa-link me-2"></i>${r.name}</a>
+          </li>`).join('') +
+          '</ul>';
+      })
+      .catch(()=>document.getElementById('resourceList').innerHTML = `<div class="alert alert-danger">Failed to load resources.</div>`);
+
+    // Dynamic Members (avatars, statuses, tooltips)
+    fetch('members_online.php')
+      .then(res=>res.ok?res.json():[])
+      .then(data=>{
+        let html = '';
+        data.forEach(m=>{
+          let avatarUrl = m.avatar_uploaded && m.avatar_uploaded !== "" 
+            ? m.avatar_uploaded 
+            : (m.avatar ? m.avatar : `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(m.name)}`);
+          html += `
+            <div class="avatar-container">
+              <img src="${avatarUrl}" class="avatar" alt="${m.name}" title="${m.name}" tabindex="0">
+              <span class="avatar-badge${m.online?'':' offline'}" title="${m.online?'Online':'Offline'}">
+                <i class="fa fa-circle"></i>
+              </span>
+              <span class="avatar-tooltip">${m.name}${m.role ? ' ('+m.role+')' : ''}</span>
+            </div>`;
+        });
+        document.getElementById('memberAvatars').innerHTML = html;
+        document.getElementById('chatOnline').innerText = data.filter(x=>x.online).length + ' online';
+        document.querySelectorAll('.avatar').forEach(function(avatar){
+          avatar.addEventListener('focus', function(){
+            this.nextElementSibling.nextElementSibling.style.opacity = 1;
+          });
+          avatar.addEventListener('blur', function(){
+            this.nextElementSibling.nextElementSibling.style.opacity = 0;
+          });
+        });
+      })
+      .catch(()=>document.getElementById('memberAvatars').innerHTML = `<div class="alert alert-danger">Failed to load members.</div>`);
+
+    // Chat
+    function renderChat(msgs) {
+      const chatBox = document.getElementById('chatBox');
+      chatBox.innerHTML = msgs.map(c=>`<div class="chat-msg"><b>${c.name}:</b> ${c.msg}</div>`).join("");
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+    function loadChat() {
+      fetch('chat.php')
+        .then(res=>res.ok?res.json():[])
+        .then(msgs=>renderChat(msgs))
+        .catch(()=>{document.getElementById('chatBox').innerHTML = `<div class="alert alert-danger">Failed to load chat.</div>`;});
+    }
+    loadChat();
+    setInterval(loadChat, 6000);
+
+    // Chat send
+    document.getElementById('chatForm').addEventListener('submit', function(e){
+      e.preventDefault();
+      let btn = document.getElementById('chatBtnText');
+      let spinner = document.getElementById('chatSpinner');
+      btn.classList.add('d-none');
+      spinner.classList.remove('d-none');
+      let msg = document.getElementById('chatMessage').value.trim();
+      fetch('api/chat.php', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({message: msg})
+      })
+      .then(res=>res.json())
+      .then(resp=>{
+        btn.classList.remove('d-none');
+        spinner.classList.add('d-none');
+        if(resp.success){
+          showToast("Message sent!","success");
+          document.getElementById('chatMessage').value = '';
+          loadChat();
+        } else {
+          document.getElementById('chatAlert').innerHTML = `<div class="alert alert-danger alert-fade">${resp.error || 'Failed to send.'}</div>`;
+        }
+      })
+      .catch(()=>{
+        btn.classList.remove('d-none');
+        spinner.classList.add('d-none');
+        document.getElementById('chatAlert').innerHTML = `<div class="alert alert-danger alert-fade">Failed to send message.</div>`;
+      });
+    });
+
+    // Feedback form AJAX
+    document.getElementById('feedbackForm').addEventListener('submit', function(e){
+      e.preventDefault();
+      let btn = document.getElementById('feedbackBtnText');
+      let spinner = document.getElementById('feedbackSpinner');
+      btn.classList.add('d-none');
+      spinner.classList.remove('d-none');
+      let msg = this.message.value.trim();
+      fetch('feedback.php', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({message: msg})
+      })
+      .then(res=>res.json())
+      .then(resp=>{
+        btn.classList.remove('d-none');
+        spinner.classList.add('d-none');
+        if(resp.success){
+          document.getElementById('feedbackAlert').innerHTML = `<div class="alert alert-success alert-fade">Feedback sent. Thank you!</div>`;
+          showToast("Feedback sent!","info");
+          setTimeout(()=>document.getElementById('feedbackAlert').innerHTML="", 2200);
+          document.getElementById('feedbackForm').reset();
+        } else {
+          document.getElementById('feedbackAlert').innerHTML = `<div class="alert alert-danger alert-fade">${resp.error || 'Failed to send.'}</div>`;
+        }
+      })
+      .catch(()=>{
+        btn.classList.remove('d-none');
+        spinner.classList.add('d-none');
+        document.getElementById('feedbackAlert').innerHTML = `<div class="alert alert-danger alert-fade">Failed to send feedback.</div>`;
+      });
+    });
+
+    // Smooth scroll for nav
+    document.querySelectorAll('a.nav-link[href^="#"]').forEach(link=>{
+      link.addEventListener('click', function(e){
+        e.preventDefault();
+        let target = document.querySelector(this.getAttribute('href'));
+        if(target){
+          target.scrollIntoView({behavior:'smooth'});
+        }
+      });
+    });
+  </script>
+</body>
+</html>

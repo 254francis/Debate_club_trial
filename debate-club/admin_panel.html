@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Panel | USIU-A Debate Society</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/debate-theme.css">
+  <style>
+    .fade-in { opacity: 0; transform: translateY(30px); transition: all 0.7s cubic-bezier(.48,.2,.52,.97);}
+    .fade-in.show { opacity: 1; transform: translateY(0);}
+    .card { transition: box-shadow 0.2s, transform 0.2s; }
+    .card:hover { box-shadow: 0 8px 32px rgba(128,0,0,0.18); transform: translateY(-4px) scale(1.02);}
+    .spinner-center { display: flex; align-items: center; justify-content: center; min-height: 80px; }
+    .avatar { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; border: 2px solid var(--secondary); background:#fff; }
+    .avatar-badge { position: absolute; bottom: 0; right: -2px; background: #34c759; color: #fff; border-radius: 50%; width: 16px; height: 16px; font-size: .95rem; display: flex; align-items: center; justify-content: center; border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.15);}
+    .avatar-badge.offline { background: #bbb; }
+    .avatar-container { position: relative; display: inline-block; }
+    .avatar-tooltip { position: absolute; bottom: 110%; left: 50%; transform: translateX(-50%); background: #333; color: #fff; font-size: 0.85rem; padding: 2px 8px; border-radius: 4px; opacity: 0; pointer-events: none; transition: opacity 0.18s; white-space: nowrap; z-index: 10;}
+    .avatar:hover + .avatar-tooltip, .avatar:focus + .avatar-tooltip { opacity: 1; }
+    #adminAlert { margin-bottom: 1rem; }
+  </style>
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg fixed-top">
+    <div class="container">
+      <a class="navbar-brand" href="#">
+        <img src="assets/img/logo.png" alt="Debate Club Logo" />
+        USIU-A Debate Society
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link" href="dashboard.html">Dashboard</a></li>
+          <li class="nav-item"><a class="nav-link" href="logout.php">Logout</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+  <div class="hero" style="margin-top:56px;">
+    <img src="assets/img/logo.png" alt="Debate Club Logo" class="logo-img mb-2" style="max-height:100px;">
+    <div class="hero-title">Admin Dashboard</div>
+    <div class="hero-subtitle">Manage events, users, and club information</div>
+  </div>
+  <div class="container mt-4">
+    <div id="adminAlert"></div>
+    <div class="row">
+      <div class="col-lg-7">
+        <div class="card mb-4 fade-in" id="eventAdmin">
+          <div class="card-header">
+            <i class="fa-solid fa-calendar-plus me-2"></i> Add New Event
+          </div>
+          <div class="card-body">
+            <form id="adminEventForm" class="mb-3">
+              <input type="text" name="title" placeholder="Event Title" class="form-control mb-2" required>
+              <input type="date" name="date" class="form-control mb-2" required>
+              <textarea name="description" placeholder="Event Description" class="form-control mb-2" required></textarea>
+              <button type="submit" class="btn btn-primary mt-2" id="eventBtn">
+                <span id="eventBtnText"><i class="fa-solid fa-plus"></i> Add Event</span>
+                <span class="spinner-border spinner-border-sm d-none" id="eventSpinner"></span>
+              </button>
+            </form>
+            <hr>
+            <div>
+              <h6>Upcoming Events</h6>
+              <div class="list-group" id="adminEventList">
+                <div class="spinner-center"><div class="spinner-border"></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Users & Finance -->
+      <div class="col-lg-5">
+        <div class="card mb-4 fade-in" id="usersAdmin">
+          <div class="card-header">
+            <i class="fa-solid fa-users-gear me-2"></i> Manage Users
+          </div>
+          <div class="card-body">
+            <div class="table-responsive" style="max-height:240px;">
+              <table class="table table-sm align-middle" id="userTable">
+                <thead>
+                  <tr>
+                    <th>Avatar</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+              <div class="spinner-center" id="userTableSpinner"><div class="spinner-border"></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="card mb-4 fade-in">
+          <div class="card-header">
+            <i class="fa-solid fa-coins me-2"></i> Finance Report
+          </div>
+          <div class="card-body">
+            <iframe src="finance.php" style="width:100%; height:170px; border:none; border-radius:6px; background:#fff;"></iframe>
+            <div class="mt-2 d-flex gap-2">
+              <a href="export.php?type=csv" class="btn btn-success btn-sm">
+                <i class="fa-solid fa-file-csv"></i> Export CSV
+              </a>
+              <a href="export.php?type=pdf" class="btn btn-secondary btn-sm">
+                <i class="fa-solid fa-file-pdf"></i> Export PDF
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <footer>
+    &copy; 2025 USIU-A Debate Society. Inspired by Stanford & Oxford Union.
+  </footer>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    document.querySelectorAll('.fade-in').forEach((el, i) => { setTimeout(() => el.classList.add('show'), 200 + (i*180)); });
+
+    // Load admin events
+    function loadAdminEvents() {
+      fetch('events.php')
+        .then(res=>res.ok?res.json():[])
+        .then(events=>{
+          const list = document.getElementById('adminEventList');
+          if(!events.length) {
+            list.innerHTML = `<div class="list-group-item text-muted">No events yet.</div>`;
+            return;
+          }
+          list.innerHTML = events.map(e=>
+            `<div class="list-group-item d-flex justify-content-between align-items-center">
+              <div>
+                <b>${e.title}</b> on <span>${e.date}</span><br>
+                ${e.description}
+              </div>
+              <button class="btn btn-danger btn-sm" onclick="deleteEvent(${e.id})"><i class="fa-solid fa-trash"></i></button>
+            </div>`
+          ).join('');
+        });
+    }
+    loadAdminEvents();
+
+    document.getElementById('adminEventForm').addEventListener('submit', function(e){
+      e.preventDefault();
+      let btn = document.getElementById('eventBtnText');
+      let spinner = document.getElementById('eventSpinner');
+      btn.classList.add('d-none');
+      spinner.classList.remove('d-none');
+      let form = this;
+      fetch('events.php', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({
+          title: form.title.value,
+          date: form.date.value,
+          description: form.description.value
+        })
+      }).then(res=>res.json()).then(resp=>{
+        btn.classList.remove('d-none');
+        spinner.classList.add('d-none');
+        if(resp.success){
+          document.getElementById('adminAlert').innerHTML = `<div class="alert alert-success">Event added!</div>`;
+          form.reset();
+          loadAdminEvents();
+        } else {
+          document.getElementById('adminAlert').innerHTML = `<div class="alert alert-danger">${resp.error||'Failed to add event.'}</div>`;
+        }
+      }).catch(()=>{
+        btn.classList.remove('d-none');
+        spinner.classList.add('d-none');
+        document.getElementById('adminAlert').innerHTML = `<div class="alert alert-danger">Could not reach server.</div>`;
+      });
+    });
+
+    window.deleteEvent = function(id){
+      if(!confirm("Delete this event?")) return;
+      fetch('events.php', {method:'DELETE', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id:id})})
+        .then(res=>res.json()).then(resp=>{
+          if(resp.success){
+            document.getElementById('adminAlert').innerHTML = `<div class="alert alert-success">Event deleted!</div>`;
+            loadAdminEvents();
+          } else {
+            document.getElementById('adminAlert').innerHTML = `<div class="alert alert-danger">${resp.error||'Failed to delete event.'}</div>`;
+          }
+        });
+    }
+
+    // Users table with avatars
+    function loadUsers() {
+      fetch('admin_users.php')
+        .then(res=>res.ok?res.json():[])
+        .then(users=>{
+          const tbody = document.getElementById('userTable').querySelector('tbody');
+          if(!users.length) {
+            tbody.innerHTML = `<tr><td colspan="6" class="text-muted">No users found.</td></tr>`;
+            return;
+          }
+          tbody.innerHTML = users.map(u=>{
+            let avatarUrl = u.avatar_uploaded && u.avatar_uploaded !== ""
+              ? u.avatar_uploaded
+              : (u.avatar ? u.avatar : `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(u.name)}`);
+            return `
+              <tr>
+                <td>
+                  <div class="avatar-container">
+                    <img src="${avatarUrl}" class="avatar" alt="${u.name}" title="${u.name}" tabindex="0">
+                    <span class="avatar-badge${u.online?'':' offline'}" title="${u.online?'Online':'Offline'}">
+                      <i class="fa fa-circle"></i>
+                    </span>
+                    <span class="avatar-tooltip">${u.name}${u.role ? ' ('+u.role+')' : ''}</span>
+                  </div>
+                </td>
+                <td>${u.name}</td>
+                <td>${u.email}</td>
+                <td>${u.role}</td>
+                <td>${u.online ? '<span class="badge bg-success">Online</span>' : '<span class="badge bg-secondary">Offline</span>'}</td>
+                <td>
+                  ${u.role !== 'admin' ? `<button class="btn btn-danger btn-sm" onclick="deleteUser(${u.id})"><i class="fa-solid fa-user-slash"></i></button>` : ''}
+                </td>
+              </tr>`;
+          }).join('');
+          document.getElementById('userTableSpinner').style.display = "none";
+          // avatar tooltip accessibility
+          document.querySelectorAll('.avatar').forEach(function(avatar){
+            avatar.addEventListener('focus', function(){
+              this.nextElementSibling.nextElementSibling.style.opacity = 1;
+            });
+            avatar.addEventListener('blur', function(){
+              this.nextElementSibling.nextElementSibling.style.opacity = 0;
+            });
+          });
+        });
+    }
+    loadUsers();
+
+    window.deleteUser = function(id){
+      if(!confirm("Delete this user?")) return;
+      fetch('admin_users.php', {method:'DELETE', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id:id})})
+        .then(res=>res.json()).then(resp=>{
+          if(resp.success){
+            document.getElementById('adminAlert').innerHTML = `<div class="alert alert-success">User deleted!</div>`;
+            loadUsers();
+          } else {
+            document.getElementById('adminAlert').innerHTML = `<div class="alert alert-danger">${resp.error||'Failed to delete user.'}</div>`;
+          }
+        });
+    }
+  </script>
+</body>
+</html>
